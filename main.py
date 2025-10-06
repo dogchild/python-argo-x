@@ -99,14 +99,46 @@ async def download_file(file_name, file_url):
     file_path = Path(FILE_PATH) / file_name
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(file_url)
-            response.raise_for_status()
+            # 一次GET请求同时实现流式下载和获取文件大小信息
+            expected_size = None
+            
             async with aiofiles.open(file_path, 'wb') as f:
-                await f.write(response.content)
-            print(f"Download {file_name} successfully")
+                # stream=True 参数启用流式下载
+                async with client.stream('GET', file_url) as response:
+                    response.raise_for_status()
+                    
+                    # 从GET响应头中获取预期的文件大小
+                    content_length = response.headers.get('Content-Length')
+                    if content_length:
+                        expected_size = int(content_length)
+                    
+                    # 逐块写入文件
+                    async for chunk in response.aiter_bytes(chunk_size=8192):  # 8KB chunks
+                        if chunk:
+                            await f.write(chunk)
+            
+            # 校验下载的文件大小是否与预期一致
+            if expected_size:
+                # 检查硬盘上已保存文件的实际大小
+                actual_file_size = file_path.stat().st_size
+                if actual_file_size != expected_size:
+                    print(f"文件大小不匹配: {file_name} - 预期: {expected_size} 字节, 实际: {actual_file_size} 字节")
+                    # 删除不完整的文件
+                    if file_path.exists():
+                        file_path.unlink()
+                    return False
+            
+            print(f"成功下载 {file_name}")
             return True
     except Exception as e:
         print(f"Download {file_name} failed: {e}")
+        # 在异常时删除可能已创建的不完整文件
+        if file_path.exists():
+            try:
+                file_path.unlink()
+                print(f"Removed incomplete file: {file_path}")
+            except Exception as delete_error:
+                print(f"Failed to remove incomplete file {file_path}: {delete_error}")
         return False
 
 async def download_files_and_run():
