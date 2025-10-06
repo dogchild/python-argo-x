@@ -1,0 +1,38 @@
+# 开发工具
+.qoder/
+node_modules/
+.npm
+.env
+.env.local
+.env.*.local
+
+# 运行时文件
+tmp/
+*.log
+*.pid
+boot.log
+config.json
+config.yaml
+tunnel.json
+tunnel.yml
+sub.txt
+
+# 二进制文件
+web
+bot
+npm
+
+# 系统文件
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# 编辑器
+.vscode/
+.idea/
+*.sublime-*
+
+# 测试覆盖率
+coverage/
+.nyc_output/
