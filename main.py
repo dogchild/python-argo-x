@@ -152,35 +152,10 @@ async def start_web():
         print(f"web running error: {e}")
         return None
 
-def setup_bot_config():
-    """为固定bot设置配置文件(bot.json和bot.yml)"""
-    if not ARGO_AUTH or 'TunnelSecret' not in ARGO_AUTH:
-        return
-    try:
-        auth_data = json.loads(ARGO_AUTH)
-        bot_json_path = Path(FILE_PATH) / 'bot.json'
-        with open(bot_json_path, 'w') as f:
-            json.dump(auth_data, f, indent=2)
-        
-        bot_id = auth_data.get('TunnelID') or next((k for k in auth_data.keys() if len(k) > 30), list(auth_data.keys())[0])
-        bot_yml_content = f"""tunnel: {bot_id}
-credentials-file: {bot_json_path}
-protocol: http2
 
-ingress:
-  - hostname: {ARGO_DOMAIN}
-    service: http://localhost:{ARGO_PORT}
-    originRequest:
-      noTLSVerify: true
-  - service: http_status:404
-"""
-        with open(Path(FILE_PATH) / 'bot.yml', 'w') as f:
-            f.write(bot_yml_content)
-    except Exception as e:
-        print(f"Error setting up bot config: {e}")
 
 async def start_bot():
-    """启动bot服务，支持token、json配置和临时隧道三种模式"""
+    """启动bot服务，支持token和临时隧道两种模式"""
     bot_path = Path(FILE_PATH) / 'bot'
     if not bot_path.exists():
         print("Bot binary not found")
@@ -189,9 +164,6 @@ async def start_bot():
     # 根据ARGO_AUTH类型选择启动参数
     if ARGO_AUTH and re.match(r'^[A-Z0-9a-z=]{120,250}$', ARGO_AUTH):  # Token模式
         args = ['tunnel', '--edge-ip-version', 'auto', '--no-autoupdate', '--protocol', 'http2', 'run', '--token', ARGO_AUTH]
-    elif ARGO_AUTH and 'TunnelSecret' in ARGO_AUTH:  # JSON配置模式
-        setup_bot_config()
-        args = ['tunnel', '--edge-ip-version', 'auto', '--config', str(Path(FILE_PATH) / 'bot.yml'), 'run']
     else:  # 临时隧道模式
         args = ['tunnel', '--edge-ip-version', 'auto', '--no-autoupdate', '--protocol', 'http2', '--logfile', str(Path(FILE_PATH) / 'boot.log'), '--loglevel', 'info', '--url', f'http://localhost:{ARGO_PORT}']
     
