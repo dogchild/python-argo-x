@@ -1,13 +1,19 @@
-FROM node:lts-slim
+FROM python:3.11-slim
 
 WORKDIR /app
+
+COPY requirements.txt .
+
+RUN apt update -y && \
+    apt install -y curl && \
+    pip install --no-cache-dir -r requirements.txt && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY . .
 
 EXPOSE 3005
 
-RUN apt update -y &&\
-    chmod +x index.js &&\
-    npm install 
-    
-CMD ["node", "index.js"]
+RUN chmod +x main.py
+
+CMD ["python", "main.py"]

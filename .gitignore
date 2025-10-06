@@ -8,6 +8,7 @@ node_modules/
 
 # 运行时文件
 tmp/
+__pycache__/
 *.log
 *.pid
 boot.log
