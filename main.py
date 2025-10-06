@@ -193,8 +193,8 @@ async def start_bot():
         print("Bot binary not found")
         return None
     
-    # 根据ARGO_AUTH类型选择启动参数
-    if ARGO_AUTH and re.match(r'^[A-Z0-9a-z=]{120,250}$', ARGO_AUTH):  # Token模式
+    # 根据ARGO_AUTH和ARGO_DOMAIN类型选择启动参数
+    if ARGO_AUTH and ARGO_DOMAIN and re.match(r'^[A-Z0-9a-z=]{120,250}$', ARGO_AUTH):  # Token模式（需要同时配置域名和Token）
         args = ['tunnel', '--edge-ip-version', 'auto', '--no-autoupdate', '--protocol', 'http2', 'run', '--token', ARGO_AUTH]
     else:  # 临时隧道模式
         args = ['tunnel', '--edge-ip-version', 'auto', '--no-autoupdate', '--protocol', 'http2', '--logfile', str(Path(FILE_PATH) / 'boot.log'), '--loglevel', 'info', '--url', f'http://localhost:{ARGO_PORT}']
