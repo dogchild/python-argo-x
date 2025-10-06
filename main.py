@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Python-Argo-X
-通过 Cloudflare Argo 隧道提供代理订阅链接的 Python 工具
+通过 Argo 提供订阅链接的 Python 工具
 原作者: dogchild
 """
 
