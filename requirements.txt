@@ -1,5 +1,5 @@
-fastapi
-uvicorn
-httpx
-aiofiles
-python-dotenv
+fastapi~=0.118
+uvicorn~=0.37
+httpx~=0.28
+aiofiles~=24.1
+python-dotenv~=1.1
