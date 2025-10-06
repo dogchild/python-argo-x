@@ -1,16 +1,35 @@
 FROM python:slim
 
+# 设置工作目录
 WORKDIR /app
 
-# 复制并安装Python依赖
+# 复制依赖文件并安装Python依赖
+# 这一步会利用Docker缓存，只有requirements.txt变更时才会重新安装依赖
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 复制项目代码
-COPY . .
+# 设置时区为上海
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# 暴露端口
+# 创建非root用户
+RUN useradd -m appuser
+
+# 复制必要的文件
+COPY main.py LICENSE README.md .
+
+# 设置文件权限
+RUN chown -R appuser:appuser /app
+
+# 切换到非root用户
+USER appuser
+
+# 暴露应用端口
 EXPOSE 3005
 
-# 运行命令
+# 添加健康检查（使用根端点作为健康检查目标）
+HEALTHCHECK --interval=30s --timeout=3s \
+    CMD python -c "import http.client; conn = http.client.HTTPConnection('localhost', 3005); conn.request('GET', '/'); response = conn.getresponse(); exit(0 if response.status == 200 else 1)"
+
+# 设置容器启动命令
 CMD ["python", "main.py"]
