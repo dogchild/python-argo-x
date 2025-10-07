@@ -305,6 +305,15 @@ async def start_server():
         print("Failed to start bot")
         return
     
+    # 创建FastAPI服务任务
+    async def run_server():
+        config = uvicorn.Config(app=app, host="0.0.0.0", port=PORT, log_level="info")
+        server = uvicorn.Server(config)
+        await server.serve()
+    
+    # 启动FastAPI服务任务（不阻塞主流程）
+    server_task = asyncio.create_task(run_server())
+    
     await asyncio.sleep(5)
     domain = await extract_domains()
     if not domain:
@@ -319,9 +328,8 @@ async def start_server():
     print(f"Domain: {domain}")
     print("=" * 60)
     
-    config = uvicorn.Config(app=app, host="0.0.0.0", port=PORT, log_level="info")
-    server = uvicorn.Server(config)
-    await server.serve()
+    # 等待服务器任务完成
+    await server_task
 
 if __name__ == "__main__":
     # 设置信号处理
