@@ -17,9 +17,9 @@ config.yaml
 tunnel.json
 tunnel.yml
 sub.txt
-.jpg
-.jpeg
-.png
+*.jpg
+*.jpeg
+*.png
 
 # 二进制文件
 web

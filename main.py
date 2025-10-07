@@ -281,12 +281,11 @@ async def cleanup_processes():
                 pass
     running_processes.clear()
 
-def signal_handler(signum, frame):
-    print(f"\nReceived signal {signum}, shutting down...", flush=True)
-    asyncio.create_task(cleanup_processes())
-    sys.exit(0)
-
-async def start_server():
+async def setup_services():
+    """
+    应用程序的主要设置逻辑。
+    此函数创建目录、下载二进制文件、启动子进程并生成订阅链接。
+    """
     create_directory()
     cleanup_old_files()
     generate_web_config()
@@ -305,15 +304,6 @@ async def start_server():
         print("Failed to start bot", flush=True)
         return
     
-    # 创建FastAPI服务任务
-    async def run_server():
-        config = uvicorn.Config(app=app, host="0.0.0.0", port=PORT, log_level="info")
-        server = uvicorn.Server(config)
-        await server.serve()
-    
-    # 启动FastAPI服务任务（不阻塞主流程）
-    server_task = asyncio.create_task(run_server())
-    
     await asyncio.sleep(5)
     domain = await extract_domains()
     if not domain:
@@ -322,28 +312,33 @@ async def start_server():
     
     await generate_links(domain)
     
-    print(f"\nService started successfully!", flush=True)
+    print(f"\nService setup complete!", flush=True)
     print(f"Port: {PORT}", flush=True)
     print(f"Subscription URL: http://localhost:{PORT}/{SUB_PATH}", flush=True)
     print(f"Domain: {domain}", flush=True)
     print("=" * 60, flush=True)
-    
-    # 等待服务器任务完成
-    await server_task
+
+@app.on_event("startup")
+async def startup_event():
+    """
+    处理应用程序启动事件。
+    它会创建一个后台任务来运行设置逻辑，以免阻塞服务器启动。
+    """
+    print("Application startup: Starting setup in background...", flush=True)
+    asyncio.create_task(setup_services())
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """
+    处理应用程序关闭事件。
+    它会清理所有正在运行的子进程。
+    """
+    print("Application shutdown: Cleaning up processes...", flush=True)
+    await cleanup_processes()
 
 if __name__ == "__main__":
-    # 设置信号处理
-    if sys.platform != 'win32':
-        signal.signal(signal.SIGTERM, signal_handler)
-        signal.signal(signal.SIGINT, signal_handler)
-    else:
-        signal.signal(signal.SIGINT, signal_handler)
-    
-    try:
-        asyncio.run(start_server())
-    except KeyboardInterrupt:
-        print("\nProgram interrupted by user", flush=True)
-    except Exception as e:
-        print(f"Error: {e}", flush=True)
-    finally:
-        print("Program exited", flush=True)
+    # 这部分代码允许在本地运行应用程序以进行测试。
+    # 它使用 uvicorn 来运行 FastAPI 应用，这将正确触发
+    # startup 和 shutdown 事件。
+    print("Starting server locally with Uvicorn...", flush=True)
+    uvicorn.run(app, host="0.0.0.0", port=PORT)
