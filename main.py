@@ -19,7 +19,7 @@ from typing import Optional
 
 import httpx
 import aiofiles
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 import uvicorn
 from dotenv import load_dotenv
 
@@ -49,7 +49,7 @@ async def root():
 
 @app.get(f"/{SUB_PATH}")
 async def subscription():
-    return current_subscription or "Subscription not ready"
+    return Response(content=current_subscription or "Subscription not ready", media_type="text/plain")
 
 def create_directory():
     if not Path(FILE_PATH).exists():
@@ -262,7 +262,7 @@ async def generate_links(argo_domain):
             await f.write(current_subscription)
         
         print(f"{Path(FILE_PATH) / 'sub.txt'} saved successfully")
-        print(current_subscription[:100] + "..." if len(current_subscription) > 100 else current_subscription)
+        print(current_subscription)
         return current_subscription
     except Exception as e:
         print(f"Error generating subscription: {e}")
