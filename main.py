@@ -32,7 +32,7 @@ SUB_PATH = os.getenv('SUB_PATH', 'sub')      # 订阅路径
 PORT = int(os.getenv('SERVER_PORT', os.getenv('PORT', '3005')))  # HTTP服务订阅端口
 UUID = os.getenv('UUID', '75de94bb-b5cb-4ad4-b72b-251476b36f3a')  # 用户UUID
 ARGO_DOMAIN = os.getenv('ARGO_DOMAIN', '')   # 固定隧道域名，留空即启用临时隧道
-ARGO_AUTH = os.getenv('ARGO_AUTH', '')       # 固定隧道密钥json或token，留空即启用临时隧道
+ARGO_AUTH = os.getenv('ARGO_AUTH', '')       # 固定隧道token，留空即启用临时隧道
 ARGO_PORT = int(os.getenv('ARGO_PORT', '8001'))  # 固定隧道端口，使用token需在cloudflare后台设置和这里一致
 CFIP = os.getenv('CFIP', 'cf.877774.xyz')    # 节点优选域名或优选IP
 CFPORT = int(os.getenv('CFPORT', '443'))     # 节点优选域名或优选IP对应的端口
@@ -67,7 +67,7 @@ def cleanup_old_files():
             pass
 
 def generate_web_config():
-    """生成web配置文件，支持VLESS、VMess、Trojan三种协议"""
+    """生成web服务配置文件"""
     config = {
         "log": {"access": "/dev/null", "error": "/dev/null", "loglevel": "none"},
         "inbounds": [
@@ -142,7 +142,7 @@ async def download_file(file_name, file_url):
         return False
 
 async def download_files_and_run():
-    """下载web和bot二进制文件并设置执行权限"""
+    """下载web和bot程序文件并设置执行权限"""
     architecture = get_system_architecture()
     all_files = get_files_for_architecture(architecture)
     if not all_files:
@@ -187,16 +187,16 @@ async def start_web():
 
 
 async def start_bot():
-    """启动bot服务，支持token和临时隧道两种模式"""
+    """启动bot服务，支持token和临时连接两种模式"""
     bot_path = Path(FILE_PATH) / 'bot'
     if not bot_path.exists():
-        print("Bot binary not found")
+        print("Bot program not found")
         return None
     
     # 根据ARGO_AUTH和ARGO_DOMAIN类型选择启动参数
     if ARGO_AUTH and ARGO_DOMAIN and re.match(r'^[A-Z0-9a-z=]{120,250}$', ARGO_AUTH):  # Token模式（需要同时配置域名和Token）
         args = ['tunnel', '--edge-ip-version', 'auto', '--no-autoupdate', '--protocol', 'http2', 'run', '--token', ARGO_AUTH]
-    else:  # 临时隧道模式
+    else:  # 临时连接模式
         args = ['tunnel', '--edge-ip-version', 'auto', '--no-autoupdate', '--protocol', 'http2', '--logfile', str(Path(FILE_PATH) / 'boot.log'), '--loglevel', 'info', '--url', f'http://localhost:{ARGO_PORT}']
     
     try:
@@ -210,14 +210,14 @@ async def start_bot():
         return None
 
 async def extract_domains():
-    """提取隧道域名，优先使用固定域名，否则从日志中解析临时域名"""
+    """提取服务域名，优先使用固定域名，否则从日志中解析连接域名"""
     global current_domain
     if ARGO_AUTH and ARGO_DOMAIN:
         current_domain = ARGO_DOMAIN
         print(f'ARGO_DOMAIN: {current_domain}')
         return current_domain
     
-    # 从boot.log中提取临时域名
+    # 从boot.log中提取连接域名
     boot_log_path = Path(FILE_PATH) / 'boot.log'
     for attempt in range(15):
         try:
@@ -246,7 +246,7 @@ async def get_isp_info():
         return 'Unknown-ISP'
 
 async def generate_links(argo_domain):
-    """生成VLESS、VMess、Trojan订阅链接并保存为Base64编码"""
+    """生成网络连接配置链接并保存为Base64编码"""
     global current_subscription
     try:
         isp = await get_isp_info()
@@ -287,11 +287,6 @@ def signal_handler(signum, frame):
     sys.exit(0)
 
 async def start_server():
-    print("=" * 60)
-    print("Python-Argo-X - Cloudflare Argo隧道代理工具")
-    print("原作者: dogchild | Python重写版本")
-    print("=" * 60)
-    
     create_directory()
     cleanup_old_files()
     generate_web_config()
