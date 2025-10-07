@@ -6,7 +6,6 @@
 
 - 🐍 **纯 Python 实现** - 使用现代 Python 异步编程
 - 🚀 **高性能异步** - 基于 asyncio 和 FastAPI 框架
-- 🔄 **完全兼容** - 与原 Node.js 版本 API 完全兼容
 - 🌐 **多协议支持** - VLESS、VMess、Trojan 三种协议
 - 🔧 **灵活配置** - 支持临时隧道和固定隧道
 - 📦 **容器化部署** - Docker 支持，适合 PaaS 平台
