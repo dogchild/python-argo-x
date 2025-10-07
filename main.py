@@ -16,6 +16,7 @@ import signal
 import sys
 from pathlib import Path
 from typing import Optional
+from contextlib import asynccontextmanager
 
 import httpx
 import aiofiles
@@ -41,7 +42,16 @@ NAME = os.getenv('NAME', 'Vls')              # 节点名称前缀
 current_domain: Optional[str] = None
 current_subscription: Optional[str] = None
 running_processes = []
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("Application startup: Starting setup in background...", flush=True)
+    asyncio.create_task(setup_services())
+    yield
+    print("Application shutdown: Cleaning up processes...", flush=True)
+    await cleanup_processes()
+
+app = FastAPI(lifespan=lifespan)
 
 @app.get("/")
 async def root():
@@ -318,23 +328,7 @@ async def setup_services():
     print(f"Domain: {domain}", flush=True)
     print("=" * 60, flush=True)
 
-@app.on_event("startup")
-async def startup_event():
-    """
-    处理应用程序启动事件。
-    它会创建一个后台任务来运行设置逻辑，以免阻塞服务器启动。
-    """
-    print("Application startup: Starting setup in background...", flush=True)
-    asyncio.create_task(setup_services())
 
-@app.on_event("shutdown")
-async def shutdown_event():
-    """
-    处理应用程序关闭事件。
-    它会清理所有正在运行的子进程。
-    """
-    print("Application shutdown: Cleaning up processes...", flush=True)
-    await cleanup_processes()
 
 if __name__ == "__main__":
     # 这部分代码允许在本地运行应用程序以进行测试。
