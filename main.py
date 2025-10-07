@@ -54,9 +54,9 @@ async def subscription():
 def create_directory():
     if not Path(FILE_PATH).exists():
         Path(FILE_PATH).mkdir(parents=True, exist_ok=True)
-        print(f"{FILE_PATH} is created")
+        print(f"{FILE_PATH} is created", flush=True)
     else:
-        print(f"{FILE_PATH} already exists")
+        print(f"{FILE_PATH} already exists", flush=True)
 
 def cleanup_old_files():
     """清理旧的日志和订阅文件"""
@@ -122,23 +122,23 @@ async def download_file(file_name, file_url):
                 # 检查硬盘上已保存文件的实际大小
                 actual_file_size = file_path.stat().st_size
                 if actual_file_size != expected_size:
-                    print(f"文件大小不匹配: {file_name} - 预期: {expected_size} 字节, 实际: {actual_file_size} 字节")
+                    print(f"文件大小不匹配: {file_name} - 预期: {expected_size} 字节, 实际: {actual_file_size} 字节", flush=True)
                     # 删除不完整的文件
                     if file_path.exists():
                         file_path.unlink()
                     return False
             
-            print(f"成功下载 {file_name}")
+            print(f"成功下载 {file_name}", flush=True)
             return True
     except Exception as e:
-        print(f"Download {file_name} failed: {e}")
+        print(f"Download {file_name} failed: {e}", flush=True)
         # 在异常时删除可能已创建的不完整文件
         if file_path.exists():
             try:
                 file_path.unlink()
-                print(f"Removed incomplete file: {file_path}")
+                print(f"Removed incomplete file: {file_path}", flush=True)
             except Exception as delete_error:
-                print(f"Failed to remove incomplete file {file_path}: {delete_error}")
+                print(f"Failed to remove incomplete file {file_path}: {delete_error}", flush=True)
         return False
 
 async def download_files_and_run():
@@ -146,16 +146,16 @@ async def download_files_and_run():
     architecture = get_system_architecture()
     all_files = get_files_for_architecture(architecture)
     if not all_files:
-        print("Can't find files for current architecture")
+        print("Can't find files for current architecture", flush=True)
         return False
     
     files_to_download = [f for f in all_files if not (Path(FILE_PATH) / f["fileName"]).exists()]
     if not files_to_download:
-        print("All required files already exist, skipping download")
+        print("All required files already exist, skipping download", flush=True)
     else:
         results = await asyncio.gather(*[download_file(f["fileName"], f["fileUrl"]) for f in files_to_download])
         if not all(results):
-            print("Error downloading files")
+            print("Error downloading files", flush=True)
             return False
     
     # 设置可执行权限
@@ -164,9 +164,9 @@ async def download_files_and_run():
         if file_path.exists():
             try:
                 file_path.chmod(stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH)
-                print(f"Empowerment success for {file_path}: 775")
+                print(f"Empowerment success for {file_path}: 775", flush=True)
             except Exception as e:
-                print(f"Empowerment failed for {file_path}: {e}")
+                print(f"Empowerment failed for {file_path}: {e}", flush=True)
     return True
 
 async def start_web():
@@ -177,11 +177,11 @@ async def start_web():
             str(web_path), '-c', str(config_path),
             stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
         running_processes.append(process)
-        print('web is running')
+        print('web is running', flush=True)
         await asyncio.sleep(1)
         return process
     except Exception as e:
-        print(f"web running error: {e}")
+        print(f"web running error: {e}", flush=True)
         return None
 
 
@@ -190,7 +190,7 @@ async def start_bot():
     """启动bot服务，支持token和临时连接两种模式"""
     bot_path = Path(FILE_PATH) / 'bot'
     if not bot_path.exists():
-        print("Bot program not found")
+        print("Bot program not found", flush=True)
         return None
     
     # 根据ARGO_AUTH和ARGO_DOMAIN类型选择启动参数
@@ -202,11 +202,11 @@ async def start_bot():
     try:
         process = await asyncio.create_subprocess_exec(str(bot_path), *args, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
         running_processes.append(process)
-        print('bot is running')
+        print('bot is running', flush=True)
         await asyncio.sleep(2)
         return process
     except Exception as e:
-        print(f"Error executing bot: {e}")
+        print(f"Error executing bot: {e}", flush=True)
         return None
 
 async def extract_domains():
@@ -214,7 +214,7 @@ async def extract_domains():
     global current_domain
     if ARGO_AUTH and ARGO_DOMAIN:
         current_domain = ARGO_DOMAIN
-        print(f'ARGO_DOMAIN: {current_domain}')
+        print(f'ARGO_DOMAIN: {current_domain}', flush=True)
         return current_domain
     
     # 从boot.log中提取连接域名
@@ -224,15 +224,15 @@ async def extract_domains():
             if boot_log_path.exists():
                 async with aiofiles.open(boot_log_path, 'r') as f:
                     content = await f.read()
-                matches = re.findall(r'https?://([^\s]*trycloudflare\.com)/?', content)
+                matches = re.findall(r'https?://([^\]*trycloudflare\.com)/?', content)
                 if matches:
                     current_domain = matches[0]
-                    print(f'ArgoDomain: {current_domain}')
+                    print(f'ArgoDomain: {current_domain}', flush=True)
                     return current_domain
         except:
             pass
         await asyncio.sleep(2)
-    print('ArgoDomain not found, re-running bot to obtain ArgoDomain')
+    print('ArgoDomain not found, re-running bot to obtain ArgoDomain', flush=True)
     return None
 
 async def get_isp_info():
@@ -261,11 +261,11 @@ async def generate_links(argo_domain):
         async with aiofiles.open(Path(FILE_PATH) / 'sub.txt', 'w') as f:
             await f.write(current_subscription)
         
-        print(f"{Path(FILE_PATH) / 'sub.txt'} saved successfully")
-        print(current_subscription)
+        print(f"{Path(FILE_PATH) / 'sub.txt'} saved successfully", flush=True)
+        print(current_subscription, flush=True)
         return current_subscription
     except Exception as e:
-        print(f"Error generating subscription: {e}")
+        print(f"Error generating subscription: {e}", flush=True)
         return None
 
 async def cleanup_processes():
@@ -282,7 +282,7 @@ async def cleanup_processes():
     running_processes.clear()
 
 def signal_handler(signum, frame):
-    print(f"\nReceived signal {signum}, shutting down...")
+    print(f"\nReceived signal {signum}, shutting down...", flush=True)
     asyncio.create_task(cleanup_processes())
     sys.exit(0)
 
@@ -292,17 +292,17 @@ async def start_server():
     generate_web_config()
     
     if not await download_files_and_run():
-        print("Failed to download required files")
+        print("Failed to download required files", flush=True)
         return
     
     web_process = await start_web()
     if not web_process:
-        print("Failed to start web")
+        print("Failed to start web", flush=True)
         return
     
     bot_process = await start_bot()
     if not bot_process:
-        print("Failed to start bot")
+        print("Failed to start bot", flush=True)
         return
     
     # 创建FastAPI服务任务
@@ -317,16 +317,16 @@ async def start_server():
     await asyncio.sleep(5)
     domain = await extract_domains()
     if not domain:
-        print("Failed to extract domain")
+        print("Failed to extract domain", flush=True)
         return
     
     await generate_links(domain)
     
-    print(f"\nService started successfully!")
-    print(f"Port: {PORT}")
-    print(f"Subscription URL: http://localhost:{PORT}/{SUB_PATH}")
-    print(f"Domain: {domain}")
-    print("=" * 60)
+    print(f"\nService started successfully!", flush=True)
+    print(f"Port: {PORT}", flush=True)
+    print(f"Subscription URL: http://localhost:{PORT}/{SUB_PATH}", flush=True)
+    print(f"Domain: {domain}", flush=True)
+    print("=" * 60, flush=True)
     
     # 等待服务器任务完成
     await server_task
@@ -342,8 +342,8 @@ if __name__ == "__main__":
     try:
         asyncio.run(start_server())
     except KeyboardInterrupt:
-        print("\nProgram interrupted by user")
+        print("\nProgram interrupted by user", flush=True)
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error: {e}", flush=True)
     finally:
-        print("Program exited")
+        print("Program exited", flush=True)
