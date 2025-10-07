@@ -12,8 +12,6 @@ import base64
 import platform
 import stat
 import re
-import signal
-import sys
 from pathlib import Path
 from typing import Optional
 from contextlib import asynccontextmanager
