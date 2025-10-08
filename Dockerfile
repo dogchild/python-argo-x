@@ -29,7 +29,7 @@ EXPOSE 3005
 
 # 添加健康检查（使用根端点作为健康检查目标）
 HEALTHCHECK --interval=30s --timeout=3s \
-    CMD python -c "import http.client; conn = http.client.HTTPConnection('localhost', 3005); conn.request('GET', '/'); response = conn.getresponse(); exit(0 if response.status == 200 else 1)"
+    CMD python -c "import os, http.client; port = os.getenv('SERVER_PORT') or os.getenv('PORT') or '3005'; conn = http.client.HTTPConnection('localhost', int(port)); conn.request('GET', '/'); response = conn.getresponse(); exit(0 if response.status == 200 else 1)"
 
 # 设置容器启动命令
 CMD ["python", "main.py"]

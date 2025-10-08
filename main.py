@@ -27,14 +27,14 @@ load_dotenv(override=True)
 
 # 环境变量配置
 FILE_PATH = os.getenv('FILE_PATH', './tmp')  # 运行目录,sub节点文件保存目录
-SUB_PATH = os.getenv('SUB_PATH', 'sub')      # 订阅路径
+ID = os.getenv('ID', '75de94bb-b5cb-4ad4-b72b-251476b36f3a')  # 用户ID
+S_PATH = os.getenv('S_PATH', ID)      # 订阅路径
 PORT = int(os.getenv('SERVER_PORT', os.getenv('PORT', '3005')))  # HTTP服务订阅端口
-UUID = os.getenv('UUID', '75de94bb-b5cb-4ad4-b72b-251476b36f3a')  # 用户UUID
-ARGO_DOMAIN = os.getenv('ARGO_DOMAIN', '')   # 固定隧道域名，留空即启用临时隧道
-ARGO_AUTH = os.getenv('ARGO_AUTH', '')       # 固定隧道token，留空即启用临时隧道
-ARGO_PORT = int(os.getenv('ARGO_PORT', '8001'))  # 固定隧道端口，使用token需在cloudflare后台设置和这里一致
-CFIP = os.getenv('CFIP', 'cf.877774.xyz')    # 节点优选域名或优选IP
-CFPORT = int(os.getenv('CFPORT', '443'))     # 节点优选域名或优选IP对应的端口
+A_DOMAIN = os.getenv('A_DOMAIN', '')   # 固定隧道域名，留空即启用临时隧道
+A_AUTH = os.getenv('A_AUTH', '')       # 固定隧道token，留空即启用临时隧道
+A_PORT = int(os.getenv('A_PORT', '8001'))  # 固定隧道端口，使用token需在cloudflare后台设置和这里一致
+CIP = os.getenv('CIP', 'cf.877774.xyz')    # 节点优选域名或优选IP
+CPORT = int(os.getenv('CPORT', '443'))     # 节点优选域名或优选IP对应的端口
 NAME = os.getenv('NAME', 'Vls')              # 节点名称前缀
 
 current_domain: Optional[str] = None
@@ -55,7 +55,7 @@ app = FastAPI(lifespan=lifespan)
 async def root():
     return "Hello world!"
 
-@app.get(f"/{SUB_PATH}")
+@app.get(f"/{S_PATH}")
 async def subscription():
     return Response(content=current_subscription or "Subscription not ready", media_type="text/plain")
 
@@ -79,11 +79,11 @@ def generate_web_config():
     config = {
         "log": {"access": "/dev/null", "error": "/dev/null", "loglevel": "none"},
         "inbounds": [
-            {"port": ARGO_PORT, "protocol": "vless", "settings": {"clients": [{"id": UUID, "flow": "xtls-rprx-vision"}], "decryption": "none", "fallbacks": [{"dest": 3001}, {"path": "/vless-argo", "dest": 3002}, {"path": "/vmess-argo", "dest": 3003}, {"path": "/trojan-argo", "dest": 3004}]}, "streamSettings": {"network": "tcp"}},
-            {"port": 3001, "listen": "127.0.0.1", "protocol": "vless", "settings": {"clients": [{"id": UUID}], "decryption": "none"}, "streamSettings": {"network": "tcp", "security": "none"}},
-            {"port": 3002, "listen": "127.0.0.1", "protocol": "vless", "settings": {"clients": [{"id": UUID, "level": 0}], "decryption": "none"}, "streamSettings": {"network": "ws", "security": "none", "wsSettings": {"path": "/vless-argo"}}, "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"], "metadataOnly": False}},
-            {"port": 3003, "listen": "127.0.0.1", "protocol": "vmess", "settings": {"clients": [{"id": UUID, "alterId": 0}]}, "streamSettings": {"network": "ws", "wsSettings": {"path": "/vmess-argo"}}, "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"], "metadataOnly": False}},
-            {"port": 3004, "listen": "127.0.0.1", "protocol": "trojan", "settings": {"clients": [{"password": UUID}]}, "streamSettings": {"network": "ws", "security": "none", "wsSettings": {"path": "/trojan-argo"}}, "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"], "metadataOnly": False}}
+            {"port": A_PORT, "protocol": "vless", "settings": {"clients": [{"id": ID, "flow": "xtls-rprx-vision"}], "decryption": "none", "fallbacks": [{"dest": 3001}, {"path": "/vless-argo", "dest": 3002}, {"path": "/vmess-argo", "dest": 3003}, {"path": "/trojan-argo", "dest": 3004}]}, "streamSettings": {"network": "tcp"}},
+            {"port": 3001, "listen": "127.0.0.1", "protocol": "vless", "settings": {"clients": [{"id": ID}], "decryption": "none"}, "streamSettings": {"network": "tcp", "security": "none"}},
+            {"port": 3002, "listen": "127.0.0.1", "protocol": "vless", "settings": {"clients": [{"id": ID, "level": 0}], "decryption": "none"}, "streamSettings": {"network": "ws", "security": "none", "wsSettings": {"path": "/vless-argo"}}, "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"], "metadataOnly": False}},
+            {"port": 3003, "listen": "127.0.0.1", "protocol": "vmess", "settings": {"clients": [{"id": ID, "alterId": 0}]}, "streamSettings": {"network": "ws", "wsSettings": {"path": "/vmess-argo"}}, "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"], "metadataOnly": False}},
+            {"port": 3004, "listen": "127.0.0.1", "protocol": "trojan", "settings": {"clients": [{"password": ID}]}, "streamSettings": {"network": "ws", "security": "none", "wsSettings": {"path": "/trojan-argo"}}, "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"], "metadataOnly": False}}
         ],
         "dns": {"servers": ["https+local://8.8.8.8/dns-query"]},
         "outbounds": [{"protocol": "freedom", "tag": "direct"}, {"protocol": "blackhole", "tag": "block"}]
@@ -201,11 +201,11 @@ async def start_bot():
         print("Bot program not found", flush=True)
         return None
     
-    # 根据ARGO_AUTH和ARGO_DOMAIN类型选择启动参数
-    if ARGO_AUTH and ARGO_DOMAIN and re.match(r'^[A-Z0-9a-z=]{120,250}$', ARGO_AUTH):  # Token模式（需要同时配置域名和Token）
-        args = ['tunnel', '--edge-ip-version', 'auto', '--no-autoupdate', '--protocol', 'http2', 'run', '--token', ARGO_AUTH]
+    # 根据A_AUTH和A_DOMAIN类型选择启动参数
+    if A_AUTH and A_DOMAIN and re.match(r'^[A-Z0-9a-z=]{120,250}$', A_AUTH):  # Token模式（需要同时配置域名和Token）
+        args = ['tunnel', '--edge-ip-version', 'auto', '--no-autoupdate', '--protocol', 'http2', 'run', '--token', A_AUTH]
     else:  # 临时连接模式
-        args = ['tunnel', '--edge-ip-version', 'auto', '--no-autoupdate', '--protocol', 'http2', '--logfile', str(Path(FILE_PATH) / 'boot.log'), '--loglevel', 'info', '--url', f'http://localhost:{ARGO_PORT}']
+        args = ['tunnel', '--edge-ip-version', 'auto', '--no-autoupdate', '--protocol', 'http2', '--logfile', str(Path(FILE_PATH) / 'boot.log'), '--loglevel', 'info', '--url', f'http://localhost:{A_PORT}']
     
     try:
         process = await asyncio.create_subprocess_exec(str(bot_path), *args, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
@@ -220,9 +220,9 @@ async def start_bot():
 async def extract_domains():
     """提取服务域名，优先使用固定域名，否则从日志中解析连接域名"""
     global current_domain
-    if ARGO_AUTH and ARGO_DOMAIN:
-        current_domain = ARGO_DOMAIN
-        print(f'ARGO_DOMAIN: {current_domain}', flush=True)
+    if A_AUTH and A_DOMAIN:
+        current_domain = A_DOMAIN
+        print(f'A_DOMAIN: {current_domain}', flush=True)
         return current_domain
     
     # 从boot.log中提取连接域名
@@ -258,10 +258,10 @@ async def generate_links(argo_domain):
     global current_subscription
     try:
         isp = await get_isp_info()
-        vless_link = f"vless://{UUID}@{CFIP}:{CFPORT}?encryption=none&security=tls&sni={argo_domain}&type=ws&host={argo_domain}&path=%2Fvless-argo%3Fed%3D2560#{NAME}-{isp}-vl"
-        vmess_config = {'v': '2', 'ps': f'{NAME}-{isp}-vm', 'add': CFIP, 'port': CFPORT, 'id': UUID, 'aid': '0', 'scy': 'none', 'net': 'ws', 'type': 'none', 'host': argo_domain, 'path': '/vmess-argo?ed=2560', 'tls': 'tls', 'sni': argo_domain, 'alpn': ''}
+        vless_link = f"vless://{ID}@{CIP}:{CPORT}?encryption=none&security=tls&sni={argo_domain}&type=ws&host={argo_domain}&path=%2Fvless-argo%3Fed%3D2560#{NAME}-{isp}-vl"
+        vmess_config = {'v': '2', 'ps': f'{NAME}-{isp}-vm', 'add': CIP, 'port': CPORT, 'id': ID, 'aid': '0', 'scy': 'none', 'net': 'ws', 'type': 'none', 'host': argo_domain, 'path': '/vmess-argo?ed=2560', 'tls': 'tls', 'sni': argo_domain, 'alpn': ''}
         vmess_link = f"vmess://{base64.b64encode(json.dumps(vmess_config).encode()).decode()}"
-        trojan_link = f"trojan://{UUID}@{CFIP}:{CFPORT}?security=tls&sni={argo_domain}&type=ws&host={argo_domain}&path=%2Ftrojan-argo%3Fed%3D2560#{NAME}-{isp}-tr"
+        trojan_link = f"trojan://{ID}@{CIP}:{CPORT}?security=tls&sni={argo_domain}&type=ws&host={argo_domain}&path=%2Ftrojan-argo%3Fed%3D2560#{NAME}-{isp}-tr"
         
         sub_content = f"{vless_link}\n\n{vmess_link}\n\n{trojan_link}\n"
         current_subscription = base64.b64encode(sub_content.encode()).decode()
@@ -322,7 +322,7 @@ async def setup_services():
     
     print(f"\nService setup complete!", flush=True)
     print(f"Port: {PORT}", flush=True)
-    print(f"Subscription URL: http://localhost:{PORT}/{SUB_PATH}", flush=True)
+    print(f"Subscription URL: http://localhost:{PORT}/{S_PATH}", flush=True)
     print(f"Domain: {domain}", flush=True)
     print("=" * 60, flush=True)
 

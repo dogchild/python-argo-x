@@ -39,9 +39,9 @@
 直接使用官方Docker镜像运行容器：
 ```bash
  docker run -d -p 3005:3005 \
- -e ARGO_DOMAIN=your-domain.example.com \
- -e ARGO_AUTH=your-120-250-character-token \
- -e UUID=75de94bb-b5cb-4ad4-b72b-251476b36f3a \
+ -e A_DOMAIN=your-domain.example.com \
+ -e A_AUTH=your-120-250-character-token \
+ -e ID=75de94bb-b5cb-4ad4-b72b-251476b36f3a \
    ghcr.io/dogchild/python-argo-x:latest
 ```
 
@@ -52,28 +52,28 @@
 | 变量名 | 默认值 | 说明 |
 |--------|--------|------|
 | `FILE_PATH` | `./tmp` | 运行目录，存储节点文件 |
-| `SUB_PATH` | `sub` | 订阅路径 |
+| `S_PATH` | 等同于`ID`的值 | 订阅路径 |
 | `SERVER_PORT` / `PORT` | `3005` | HTTP 服务端口 |
-| `UUID` | `75de94bb-b5cb-4ad4-b72b-251476b36f3a` | 用户 UUID |
-| `ARGO_DOMAIN` | `` | 固定隧道域名，留空启用临时隧道 |
-| `ARGO_AUTH` | `` | 固定隧道密钥，支持 JSON/Token 格式 |
-| `ARGO_PORT` | `8001` | 固定隧道端口 |
-| `CFIP` | `cf.877774.xyz` | 节点优选域名或 IP |
-| `CFPORT` | `443` | 节点端口 |
+| `ID` | `75de94bb-b5cb-4ad4-b72b-251476b36f3a` | 用户 ID |
+| `A_DOMAIN` | `` | 固定隧道域名，留空启用临时隧道 |
+| `A_AUTH` | `` | 固定隧道密钥，支持 JSON/Token 格式 |
+| `A_PORT` | `8001` | 固定隧道端口 |
+| `CIP` | `cf.877774.xyz` | 节点优选域名或 IP |
+| `CPORT` | `443` | 节点端口 |
 | `NAME` | `Vls` | 节点名称前缀 |
 
 ### 隧道配置模式
 
 #### 1. 临时隧道（默认）
 ```bash
-# 不设置 ARGO_DOMAIN 和 ARGO_AUTH，自动生成临时域名
+# 不设置 A_DOMAIN 和 A_AUTH，自动生成临时域名
 python main.py
 ```
 
 #### 2. 固定隧道 - Token 认证
 ```bash
-export ARGO_DOMAIN="your-domain.example.com"
-export ARGO_AUTH="your-120-250-character-token"
+export A_DOMAIN="your-domain.example.com"
+export A_AUTH="your-120-250-character-token"
 python main.py
 ```
 
@@ -87,8 +87,8 @@ python main.py
 
 ### 订阅接口
 
-- `GET /{SUB_PATH}` - 订阅服务，返回 Base64 编码的订阅内容
-  - 默认路径：`/sub`
+- `GET /{S_PATH}` - 订阅服务，返回 Base64 编码的订阅内容
+  - 默认路径：`/{ID}`
   - 响应格式：`text/plain`
   - 内容编码：Base64
 
@@ -116,7 +116,7 @@ cd python-argo-x
 # 创建虚拟环境
 python -m venv venv
 source venv/bin/activate  # Linux/macOS
-# 或 venv\\Scripts\\activate  # Windows
+# 或 venv\Scripts\activate  # Windows
 
 # 安装开发依赖
 pip install -r requirements.txt
