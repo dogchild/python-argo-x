@@ -1,5 +1,6 @@
 # 开发工具
 .qoder/
+GEMINI.md
 node_modules/
 .npm
 .env
