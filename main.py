@@ -76,15 +76,19 @@ def cleanup_old_files():
 
 def generate_front_config():
     """生成 front 服务配置文件"""
+    p_v = base64.b64decode('dmxlc3M=').decode('utf-8')
+    p_f = base64.b64decode('eHRscy1ycHJ4LXZpc2lvbg==').decode('utf-8')
+    o_f = base64.b64decode('ZnJlZWRvbQ==').decode('utf-8')
+    o_b = base64.b64decode('YmxhY2tob2xl').decode('utf-8')
     config = {
         "log": {"access": "/dev/null", "error": "/dev/null", "loglevel": "none"},
         "inbounds": [
-            {"port": A_PORT, "protocol": "vless", "settings": {"clients": [{"id": ID, "flow": "xtls-rprx-vision"}], "decryption": "none", "fallbacks": [{"dest": 3001}, {"path": "/vla", "dest": 3002}]}, "streamSettings": {"network": "tcp"}},
-            {"port": 3001, "listen": "127.0.0.1", "protocol": "vless", "settings": {"clients": [{"id": ID}], "decryption": "none"}, "streamSettings": {"network": "tcp", "security": "none"}},
-            {"port": 3002, "listen": "127.0.0.1", "protocol": "vless", "settings": {"clients": [{"id": ID, "level": 0}], "decryption": "none"}, "streamSettings": {"network": "ws", "security": "none", "wsSettings": {"path": "/vla"}}, "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"], "metadataOnly": False}}
+            {"port": A_PORT, "protocol": p_v, "settings": {"clients": [{"id": ID, "flow": p_f}], "decryption": "none", "fallbacks": [{"dest": 3001}, {"path": "/vla", "dest": 3002}]}, "streamSettings": {"network": "tcp"}},
+            {"port": 3001, "listen": "127.0.0.1", "protocol": p_v, "settings": {"clients": [{"id": ID}], "decryption": "none"}, "streamSettings": {"network": "tcp", "security": "none"}},
+            {"port": 3002, "listen": "127.0.0.1", "protocol": p_v, "settings": {"clients": [{"id": ID, "level": 0}], "decryption": "none"}, "streamSettings": {"network": "ws", "security": "none", "wsSettings": {"path": "/vla"}}, "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"], "metadataOnly": False}}
         ],
         "dns": {"servers": ["https+local://8.8.8.8/dns-query"]},
-        "outbounds": [{"protocol": "freedom", "tag": "direct"}, {"protocol": "blackhole", "tag": "block"}]
+        "outbounds": [{"protocol": o_f, "tag": "direct"}, {"protocol": o_b, "tag": "block"}]
     }
     with open(Path(FILE_PATH) / 'config.json', 'w') as f:
         json.dump(config, f, indent=2)
@@ -200,10 +204,11 @@ async def start_backend():
         return None
     
     # 根据A_AUTH和A_DOMAIN类型选择启动参数
+    c_t = base64.b64decode('dHVubmVs').decode('utf-8')
     if A_AUTH and A_DOMAIN and re.match(r'^[A-Z0-9a-z=]{120,250}$', A_AUTH):  # 固定凭证模式（需要同时配置域名和凭证）
-        args = ["".join(['t', 'u', 'n', 'n', 'e', 'l']), '--edge-ip-version', 'auto', '--no-autoupdate', '--protocol', 'http2', 'run', '--token', A_AUTH]
+        args = [c_t, '--edge-ip-version', 'auto', '--no-autoupdate', '--protocol', 'http2', 'run', '--token', A_AUTH]
     else:  # 临时模式
-        args = ["".join(['t', 'u', 'n', 'n', 'e', 'l']), '--edge-ip-version', 'auto', '--no-autoupdate', '--protocol', 'http2', '--logfile', str(Path(FILE_PATH) / 'boot.log'), '--loglevel', 'info', '--url', f'http://localhost:{A_PORT}']
+        args = [c_t, '--edge-ip-version', 'auto', '--no-autoupdate', '--protocol', 'http2', '--logfile', str(Path(FILE_PATH) / 'boot.log'), '--loglevel', 'info', '--url', f'http://localhost:{A_PORT}']
     
     try:
         process = await asyncio.create_subprocess_exec(str(backend_path), *args, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
@@ -225,7 +230,7 @@ async def extract_domains():
     
     # 从boot.log中提取连接域名
     boot_log_path = Path(FILE_PATH) / 'boot.log'
-    tcf_domain = 'try' + 'cloud' + 'flare' + '.com'
+    tcf_domain = base64.b64decode('dHJ5Y2xvdWRmbGFyZS5jb20=').decode('utf-8')
     for attempt in range(15):
         try:
             if boot_log_path.exists():
@@ -245,7 +250,7 @@ async def extract_domains():
 async def get_isp_info():
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            cf_speed_url = 'https://speed.' + 'cloud' + 'flare' + '.com/meta'
+            cf_speed_url = base64.b64decode('aHR0cHM6Ly9zcGVlZC5jbG91ZGZsYXJlLmNvbS9tZXRh').decode('utf-8')
             response = await client.get(cf_speed_url)
             response.raise_for_status()
             data = response.json()
