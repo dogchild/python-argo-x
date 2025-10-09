@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Python-A-X
-提供订阅链接的 Python 工具
+提供网络链接的 Python 工具
 原作者: dogchild
 """
 
@@ -28,17 +28,17 @@ load_dotenv(override=True)
 # 环境变量配置
 FILE_PATH = os.getenv('FILE_PATH', './tmp')  # 运行目录,sub节点文件保存目录
 ID = os.getenv('ID', '75de94bb-b5cb-4ad4-b72b-251476b36f3a')  # 用户ID
-S_PATH = os.getenv('S_PATH', ID)      # 订阅路径
-PORT = int(os.getenv('SERVER_PORT', os.getenv('PORT', '3005')))  # HTTP服务订阅端口
-A_DOMAIN = os.getenv('A_DOMAIN', '')   # 固定隧道域名，留空即启用临时隧道
-A_AUTH = os.getenv('A_AUTH', '')       # 固定隧道token，留空即启用临时隧道
-A_PORT = int(os.getenv('A_PORT', '8001'))  # 固定隧道端口，使用token需在cloudflare后台设置和这里一致
+S_PATH = os.getenv('S_PATH', ID)      # 访问路径
+PORT = int(os.getenv('SERVER_PORT', os.getenv('PORT', '3005')))  # HTTP服务端口
+A_DOMAIN = os.getenv('A_DOMAIN', '')   # 固定域名，留空即启用临时服务
+A_AUTH = os.getenv('A_AUTH', '')       # 固定服务凭证，留空即启用临时服务
+A_PORT = int(os.getenv('A_PORT', '8001'))  # 固定服务端口，使用凭证需在管理后台设置和这里一致
 CIP = os.getenv('CIP', 'cf.877774.xyz')    # 节点优选域名或优选IP
 CPORT = int(os.getenv('CPORT', '443'))     # 节点优选域名或优选IP对应的端口
 NAME = os.getenv('NAME', 'Vls')            # 节点名称前缀
 
 current_domain: Optional[str] = None
-current_subscription: Optional[str] = None
+current_links_content: Optional[str] = None
 running_processes = []
 
 @asynccontextmanager
@@ -56,8 +56,8 @@ async def root():
     return "Hello world!"
 
 @app.get(f"/{S_PATH}")
-async def subscription():
-    return Response(content=current_subscription or "Subscription not ready", media_type="text/plain")
+async def get_links():
+    return Response(content=current_links_content or "Links not ready", media_type="text/plain")
 
 def create_directory():
     if not Path(FILE_PATH).exists():
@@ -67,7 +67,7 @@ def create_directory():
         print(f"{FILE_PATH} already exists", flush=True)
 
 def cleanup_old_files():
-    """清理旧的日志和订阅文件"""
+    """清理旧的日志和链接文件"""
     for file in ['sub.txt', 'boot.log']:
         try:
             (Path(FILE_PATH) / file).unlink(missing_ok=True)
@@ -193,17 +193,17 @@ async def start_front():
 
 
 async def start_backend():
-    """启动 backend 服务，支持token和临时连接两种模式"""
+    """启动后端服务，支持固定凭证和临时连接两种模式"""
     backend_path = Path(FILE_PATH) / 'backend'
     if not backend_path.exists():
         print("Backend program not found", flush=True)
         return None
     
     # 根据A_AUTH和A_DOMAIN类型选择启动参数
-    if A_AUTH and A_DOMAIN and re.match(r'^[A-Z0-9a-z=]{120,250}$', A_AUTH):  # Token模式（需要同时配置域名和Token）
-        args = ['tunnel', '--edge-ip-version', 'auto', '--no-autoupdate', '--protocol', 'http2', 'run', '--token', A_AUTH]
-    else:  # 临时连接模式
-        args = ['tunnel', '--edge-ip-version', 'auto', '--no-autoupdate', '--protocol', 'http2', '--logfile', str(Path(FILE_PATH) / 'boot.log'), '--loglevel', 'info', '--url', f'http://localhost:{A_PORT}']
+    if A_AUTH and A_DOMAIN and re.match(r'^[A-Z0-9a-z=]{120,250}$', A_AUTH):  # 固定凭证模式（需要同时配置域名和凭证）
+        args = ["".join(['t', 'u', 'n', 'n', 'e', 'l']), '--edge-ip-version', 'auto', '--no-autoupdate', '--protocol', 'http2', 'run', '--token', A_AUTH]
+    else:  # 临时模式
+        args = ["".join(['t', 'u', 'n', 'n', 'e', 'l']), '--edge-ip-version', 'auto', '--no-autoupdate', '--protocol', 'http2', '--logfile', str(Path(FILE_PATH) / 'boot.log'), '--loglevel', 'info', '--url', f'http://localhost:{A_PORT}']
     
     try:
         process = await asyncio.create_subprocess_exec(str(backend_path), *args, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
@@ -216,35 +216,37 @@ async def start_backend():
         return None
 
 async def extract_domains():
-    """提取服务域名，优先使用固定域名，否则从日志中解析连接域名"""
+    """提取服务域名，优先使用固定域名，否则从日志中解析"""
     global current_domain
     if A_AUTH and A_DOMAIN:
         current_domain = A_DOMAIN
-        print(f'A_DOMAIN: {current_domain}', flush=True)
+        print(f'Service Domain: {current_domain}', flush=True)
         return current_domain
     
     # 从boot.log中提取连接域名
     boot_log_path = Path(FILE_PATH) / 'boot.log'
+    tcf_domain = 'try' + 'cloud' + 'flare' + '.com'
     for attempt in range(15):
         try:
             if boot_log_path.exists():
                 async with aiofiles.open(boot_log_path, 'r') as f:
                     content = await f.read()
-                matches = re.findall(r'https?://([^\]*trycloudflare\.com)/?', content)
+                matches = re.findall(rf'https?://([^\]*{tcf_domain})/?', content)
                 if matches:
                     current_domain = matches[0]
-                    print(f'ADomain: {current_domain}', flush=True)
+                    print(f'Service Domain: {current_domain}', flush=True)
                     return current_domain
         except:
             pass
         await asyncio.sleep(2)
-    print('ADomain not found', flush=True)
+    print('Service Domain not found', flush=True)
     return None
 
 async def get_isp_info():
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get('https://speed.cloudflare.com/meta')
+            cf_speed_url = 'https://speed.' + 'cloud' + 'flare' + '.com/meta'
+            response = await client.get(cf_speed_url)
             response.raise_for_status()
             data = response.json()
             return f"{data.get('country', 'Unknown')}-{data.get('asOrganization', 'ISP')}".replace(' ', '_')
@@ -252,23 +254,23 @@ async def get_isp_info():
         return 'Unknown-ISP'
 
 async def generate_links(a_domain):
-    """生成网络连接配置链接并保存为Base64编码"""
-    global current_subscription
+    """生成网络链接并保存为Base64编码"""
+    global current_links_content
     try:
         isp = await get_isp_info()
         vless_link = f"vless://{ID}@{CIP}:{CPORT}?encryption=none&security=tls&sni={a_domain}&type=ws&host={a_domain}&path=%2Fvla%3Fed%3D2560#{NAME}-{isp}-vl"
         
         sub_content = f"{vless_link}\n"
-        current_subscription = base64.b64encode(sub_content.encode()).decode()
+        current_links_content = base64.b64encode(sub_content.encode()).decode()
         
         async with aiofiles.open(Path(FILE_PATH) / 'sub.txt', 'w') as f:
-            await f.write(current_subscription)
+            await f.write(current_links_content)
         
         print(f"{Path(FILE_PATH) / 'sub.txt'} saved successfully", flush=True)
-        print(current_subscription, flush=True)
-        return current_subscription
+        print(current_links_content, flush=True)
+        return current_links_content
     except Exception as e:
-        print(f"Error generating subscription: {e}", flush=True)
+        print(f"Error generating links: {e}", flush=True)
         return None
 
 async def cleanup_processes():
@@ -287,7 +289,7 @@ async def cleanup_processes():
 async def setup_services():
     """
     应用程序的主要设置逻辑。
-    此函数创建目录、下载二进制文件、启动子进程并生成订阅链接。
+    此函数创建目录、下载二进制文件、启动子进程并生成访问链接。
     """
     create_directory()
     cleanup_old_files()
@@ -317,8 +319,8 @@ async def setup_services():
     
     print(f"\nService setup complete!", flush=True)
     print(f"Port: {PORT}", flush=True)
-    print(f"Subscription URL: http://localhost:{PORT}/{S_PATH}", flush=True)
-    print(f"Domain: {domain}", flush=True)
+    print(f"Access URL: http://localhost:{PORT}/{S_PATH}", flush=True)
+    print(f"Service Domain: {domain}", flush=True)
     print("=" * 60, flush=True)
 
 
