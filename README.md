@@ -1,12 +1,12 @@
 # Python-Argo-X
 
-通过 Cloudflare Argo 隧道提供 Xray 订阅链接的 Python 工具。
+通过 Cloudflare Argo 隧道提供 Xray VLESS 订阅链接的 Python 工具。
 
 ## ✨ 特性
 
 - 🐍 **纯 Python 实现** - 使用现代 Python 异步编程
 - 🚀 **高性能异步** - 基于 asyncio 和 FastAPI 框架
-- 🌐 **多协议支持** - VLESS、VMess、Trojan 三种协议
+- 🌐 **协议支持** - VLESS 协议
 - 🔧 **灵活配置** - 支持临时隧道和固定隧道
 - 📦 **容器化部署** - Docker 支持，适合 PaaS 平台
 - 🔒 **安全可靠** - 自动处理进程管理和错误恢复
