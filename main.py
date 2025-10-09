@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Python-Argo-X
-通过 Argo 提供订阅链接的 Python 工具
+Python-A-X
+提供订阅链接的 Python 工具
 原作者: dogchild
 """
 
@@ -74,16 +74,14 @@ def cleanup_old_files():
         except:
             pass
 
-def generate_web_config():
-    """生成web服务配置文件"""
+def generate_front_config():
+    """生成 front 服务配置文件"""
     config = {
         "log": {"access": "/dev/null", "error": "/dev/null", "loglevel": "none"},
         "inbounds": [
-            {"port": A_PORT, "protocol": "vless", "settings": {"clients": [{"id": ID, "flow": "xtls-rprx-vision"}], "decryption": "none", "fallbacks": [{"dest": 3001}, {"path": "/vless-argo", "dest": 3002}, {"path": "/vmess-argo", "dest": 3003}, {"path": "/trojan-argo", "dest": 3004}]}, "streamSettings": {"network": "tcp"}},
+            {"port": A_PORT, "protocol": "vless", "settings": {"clients": [{"id": ID, "flow": "xtls-rprx-vision"}], "decryption": "none", "fallbacks": [{"dest": 3001}, {"path": "/vla", "dest": 3002}]}, "streamSettings": {"network": "tcp"}},
             {"port": 3001, "listen": "127.0.0.1", "protocol": "vless", "settings": {"clients": [{"id": ID}], "decryption": "none"}, "streamSettings": {"network": "tcp", "security": "none"}},
-            {"port": 3002, "listen": "127.0.0.1", "protocol": "vless", "settings": {"clients": [{"id": ID, "level": 0}], "decryption": "none"}, "streamSettings": {"network": "ws", "security": "none", "wsSettings": {"path": "/vless-argo"}}, "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"], "metadataOnly": False}},
-            {"port": 3003, "listen": "127.0.0.1", "protocol": "vmess", "settings": {"clients": [{"id": ID, "alterId": 0}]}, "streamSettings": {"network": "ws", "wsSettings": {"path": "/vmess-argo"}}, "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"], "metadataOnly": False}},
-            {"port": 3004, "listen": "127.0.0.1", "protocol": "trojan", "settings": {"clients": [{"password": ID}]}, "streamSettings": {"network": "ws", "security": "none", "wsSettings": {"path": "/trojan-argo"}}, "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"], "metadataOnly": False}}
+            {"port": 3002, "listen": "127.0.0.1", "protocol": "vless", "settings": {"clients": [{"id": ID, "level": 0}], "decryption": "none"}, "streamSettings": {"network": "ws", "security": "none", "wsSettings": {"path": "/vla"}}, "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"], "metadataOnly": False}}
         ],
         "dns": {"servers": ["https+local://8.8.8.8/dns-query"]},
         "outbounds": [{"protocol": "freedom", "tag": "direct"}, {"protocol": "blackhole", "tag": "block"}]
@@ -99,9 +97,9 @@ def get_system_architecture():
 def get_files_for_architecture(architecture):
     """根据架构返回需要下载的文件列表"""
     if architecture == 'arm':
-        return [{"fileName": "web", "fileUrl": "https://arm.dogchild.eu.org/xray"}, {"fileName": "bot", "fileUrl": "https://arm.dogchild.eu.org/cloudflared"}]
+        return [{"fileName": "front", "fileUrl": "https://arm.dogchild.eu.org/front"}, {"fileName": "backend", "fileUrl": "https://arm.dogchild.eu.org/backend"}]
     else:
-        return [{"fileName": "web", "fileUrl": "https://amd.dogchild.eu.org/xray"}, {"fileName": "bot", "fileUrl": "https://amd.dogchild.eu.org/cloudflared"}]
+        return [{"fileName": "front", "fileUrl": "https://amd.dogchild.eu.org/front"}, {"fileName": "backend", "fileUrl": "https://amd.dogchild.eu.org/backend"}]
 
 async def download_file(file_name, file_url):
     file_path = Path(FILE_PATH) / file_name
@@ -150,7 +148,7 @@ async def download_file(file_name, file_url):
         return False
 
 async def download_files_and_run():
-    """下载web和bot程序文件并设置执行权限"""
+    """下载 front 和 backend 程序文件并设置执行权限"""
     architecture = get_system_architecture()
     all_files = get_files_for_architecture(architecture)
     if not all_files:
@@ -167,7 +165,7 @@ async def download_files_and_run():
             return False
     
     # 设置可执行权限
-    for file_name in ['web', 'bot']:
+    for file_name in ['front', 'backend']:
         file_path = Path(FILE_PATH) / file_name
         if file_path.exists():
             try:
@@ -177,28 +175,28 @@ async def download_files_and_run():
                 print(f"Empowerment failed for {file_path}: {e}", flush=True)
     return True
 
-async def start_web():
-    web_path = Path(FILE_PATH) / 'web'
+async def start_front():
+    front_path = Path(FILE_PATH) / 'front'
     config_path = Path(FILE_PATH) / 'config.json'
     try:
         process = await asyncio.create_subprocess_exec(
-            str(web_path), '-c', str(config_path),
+            str(front_path), '-c', str(config_path),
             stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
         running_processes.append(process)
-        print('web is running', flush=True)
+        print('front is running', flush=True)
         await asyncio.sleep(1)
         return process
     except Exception as e:
-        print(f"web running error: {e}", flush=True)
+        print(f"front running error: {e}", flush=True)
         return None
 
 
 
-async def start_bot():
-    """启动bot服务，支持token和临时连接两种模式"""
-    bot_path = Path(FILE_PATH) / 'bot'
-    if not bot_path.exists():
-        print("Bot program not found", flush=True)
+async def start_backend():
+    """启动 backend 服务，支持token和临时连接两种模式"""
+    backend_path = Path(FILE_PATH) / 'backend'
+    if not backend_path.exists():
+        print("Backend program not found", flush=True)
         return None
     
     # 根据A_AUTH和A_DOMAIN类型选择启动参数
@@ -208,13 +206,13 @@ async def start_bot():
         args = ['tunnel', '--edge-ip-version', 'auto', '--no-autoupdate', '--protocol', 'http2', '--logfile', str(Path(FILE_PATH) / 'boot.log'), '--loglevel', 'info', '--url', f'http://localhost:{A_PORT}']
     
     try:
-        process = await asyncio.create_subprocess_exec(str(bot_path), *args, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
+        process = await asyncio.create_subprocess_exec(str(backend_path), *args, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
         running_processes.append(process)
-        print('bot is running', flush=True)
+        print('backend is running', flush=True)
         await asyncio.sleep(2)
         return process
     except Exception as e:
-        print(f"Error executing bot: {e}", flush=True)
+        print(f"Error executing backend: {e}", flush=True)
         return None
 
 async def extract_domains():
@@ -235,12 +233,12 @@ async def extract_domains():
                 matches = re.findall(r'https?://([^\]*trycloudflare\.com)/?', content)
                 if matches:
                     current_domain = matches[0]
-                    print(f'ArgoDomain: {current_domain}', flush=True)
+                    print(f'ADomain: {current_domain}', flush=True)
                     return current_domain
         except:
             pass
         await asyncio.sleep(2)
-    print('ArgoDomain not found, re-running bot to obtain ArgoDomain', flush=True)
+    print('ADomain not found', flush=True)
     return None
 
 async def get_isp_info():
@@ -253,17 +251,14 @@ async def get_isp_info():
     except:
         return 'Unknown-ISP'
 
-async def generate_links(argo_domain):
+async def generate_links(a_domain):
     """生成网络连接配置链接并保存为Base64编码"""
     global current_subscription
     try:
         isp = await get_isp_info()
-        vless_link = f"vless://{ID}@{CIP}:{CPORT}?encryption=none&security=tls&sni={argo_domain}&type=ws&host={argo_domain}&path=%2Fvless-argo%3Fed%3D2560#{NAME}-{isp}-vl"
-        vmess_config = {'v': '2', 'ps': f'{NAME}-{isp}-vm', 'add': CIP, 'port': CPORT, 'id': ID, 'aid': '0', 'scy': 'none', 'net': 'ws', 'type': 'none', 'host': argo_domain, 'path': '/vmess-argo?ed=2560', 'tls': 'tls', 'sni': argo_domain, 'alpn': ''}
-        vmess_link = f"vmess://{base64.b64encode(json.dumps(vmess_config).encode()).decode()}"
-        trojan_link = f"trojan://{ID}@{CIP}:{CPORT}?security=tls&sni={argo_domain}&type=ws&host={argo_domain}&path=%2Ftrojan-argo%3Fed%3D2560#{NAME}-{isp}-tr"
+        vless_link = f"vless://{ID}@{CIP}:{CPORT}?encryption=none&security=tls&sni={a_domain}&type=ws&host={a_domain}&path=%2Fvla%3Fed%3D2560#{NAME}-{isp}-vl"
         
-        sub_content = f"{vless_link}\n\n{vmess_link}\n\n{trojan_link}\n"
+        sub_content = f"{vless_link}\n"
         current_subscription = base64.b64encode(sub_content.encode()).decode()
         
         async with aiofiles.open(Path(FILE_PATH) / 'sub.txt', 'w') as f:
@@ -296,20 +291,20 @@ async def setup_services():
     """
     create_directory()
     cleanup_old_files()
-    generate_web_config()
+    generate_front_config()
     
     if not await download_files_and_run():
         print("Failed to download required files", flush=True)
         return
     
-    web_process = await start_web()
-    if not web_process:
-        print("Failed to start web", flush=True)
+    front_process = await start_front()
+    if not front_process:
+        print("Failed to start front", flush=True)
         return
     
-    bot_process = await start_bot()
-    if not bot_process:
-        print("Failed to start bot", flush=True)
+    backend_process = await start_backend()
+    if not backend_process:
+        print("Failed to start backend", flush=True)
         return
     
     await asyncio.sleep(5)

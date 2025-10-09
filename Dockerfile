@@ -16,7 +16,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN useradd -m appuser
 
 # 复制必要的文件
-COPY main.py LICENSE README.md .
+COPY main.py .
 
 # 设置文件权限
 RUN chown -R appuser:appuser /app
