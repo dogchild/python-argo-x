@@ -263,9 +263,10 @@ async def generate_links(a_domain):
     global current_links_content
     try:
         isp = await get_isp_info()
-        vless_link = f"vless://{ID}@{CIP}:{CPORT}?encryption=none&security=tls&sni={a_domain}&type=ws&host={a_domain}&path=%2Fvla%3Fed%3D2560#{NAME}-{isp}-vl"
+        p_v = base64.b64decode('dmxlc3M=').decode('utf-8')
+        v_link = f"{p_v}://{ID}@{CIP}:{CPORT}?encryption=none&security=tls&sni={a_domain}&type=ws&host={a_domain}&path=%2Fvla%3Fed%3D2560#{NAME}-{isp}-vl"
         
-        sub_content = f"{vless_link}\n"
+        sub_content = f"{v_link}\n"
         current_links_content = base64.b64encode(sub_content.encode()).decode()
         
         async with aiofiles.open(Path(FILE_PATH) / 'sub.txt', 'w') as f:
