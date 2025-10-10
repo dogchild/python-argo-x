@@ -35,7 +35,9 @@ A_AUTH = os.getenv('A_AUTH', '')       # 固定服务凭证，留空即启用临
 A_PORT = int(os.getenv('A_PORT', '8001'))  # 固定服务端口，使用凭证需在管理后台设置和这里一致
 CIP = os.getenv('CIP', 'cf.877774.xyz')    # 节点优选域名或优选IP
 CPORT = int(os.getenv('CPORT', '443'))     # 节点优选域名或优选IP对应的端口
-NAME = os.getenv('NAME', 'Vls')            # 节点名称前缀
+NAME = os.getenv('NAME', os.getenv('HOSTNAME', 'Vls'))            # 节点名称前缀
+
+
 
 current_domain: Optional[str] = None
 current_links_content: Optional[str] = None
