@@ -41,7 +41,7 @@
  docker run -d -p 3005:3005 \
  -e A_DOMAIN=your-domain.example.com \
  -e A_AUTH=your-120-250-character-token \
- -e ID=75de94bb-b5cb-4ad4-b72b-251476b36f3a \
+ -e UID=75de94bb-b5cb-4ad4-b72b-251476b36f3a \
    ghcr.io/dogchild/python-argo-x:latest
 ```
 
@@ -52,9 +52,9 @@
 | 变量名 | 默认值 | 说明 |
 |--------|--------|------|
 | `FILE_PATH` | `./tmp` | 运行目录，存储节点文件 |
-| `S_PATH` | 等同于`ID`的值 | 订阅路径 |
+| `S_PATH` | 等同于`UID`的值 | 订阅路径 |
 | `SERVER_PORT` / `PORT` | `3005` | HTTP 服务端口 |
-| `ID` | `75de94bb-b5cb-4ad4-b72b-251476b36f3a` | 用户 ID |
+| `UID` | `75de94bb-b5cb-4ad4-b72b-251476b36f3a` | 用户 UID |
 | `A_DOMAIN` | `` | 固定隧道域名，留空启用临时隧道 |
 | `A_AUTH` | `` | 固定隧道密钥，支持 JSON/Token 格式 |
 | `A_PORT` | `8001` | 固定隧道端口 |
@@ -88,7 +88,7 @@ python main.py
 ### 订阅接口
 
 - `GET /{S_PATH}` - 订阅服务，返回 Base64 编码的订阅内容
-  - 默认路径：`/{ID}`
+  - 默认路径：`/{UID}`
   - 响应格式：`text/plain`
   - 内容编码：Base64
 
