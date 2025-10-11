@@ -1,11 +1,12 @@
 # 开发工具
-.qoder/
 GEMINI.md
 node_modules/
 .npm
 .env
 .env.local
 .env.*.local
+.venv/
+.qoder/
 
 # 运行时文件
 tmp/
@@ -23,9 +24,9 @@ sub.txt
 *.png
 
 # 二进制文件
-web
-bot
 npm
+front
+backend
 
 # 系统文件
 .DS_Store
