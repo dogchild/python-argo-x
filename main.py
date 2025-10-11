@@ -27,8 +27,8 @@ load_dotenv(override=True)
 
 # 环境变量配置
 FILE_PATH = os.getenv('FILE_PATH', './tmp')  # 运行目录,sub节点文件保存目录
-ID = os.getenv('ID', '75de94bb-b5cb-4ad4-b72b-251476b36f3a')  # 用户ID
-S_PATH = os.getenv('S_PATH', ID)      # 访问路径
+UID = os.getenv('UID', '75de94bb-b5cb-4ad4-b72b-251476b36f3a')  # 用户ID
+S_PATH = os.getenv('S_PATH', UID)      # 访问路径
 PORT = int(os.getenv('SERVER_PORT', os.getenv('PORT', '3005')))  # HTTP服务端口
 A_DOMAIN = os.getenv('A_DOMAIN', '')   # 固定域名，留空即启用临时服务
 A_AUTH = os.getenv('A_AUTH', '')       # 固定服务凭证，留空即启用临时服务
@@ -85,9 +85,9 @@ def generate_front_config():
     config = {
         "log": {"access": "/dev/null", "error": "/dev/null", "loglevel": "none"},
         "inbounds": [
-            {"port": A_PORT, "protocol": p_v, "settings": {"clients": [{"id": ID, "flow": p_f}], "decryption": "none", "fallbacks": [{"dest": 3001}, {"path": "/vla", "dest": 3002}]}, "streamSettings": {"network": "tcp"}},
-            {"port": 3001, "listen": "127.0.0.1", "protocol": p_v, "settings": {"clients": [{"id": ID}], "decryption": "none"}, "streamSettings": {"network": "tcp", "security": "none"}},
-            {"port": 3002, "listen": "127.0.0.1", "protocol": p_v, "settings": {"clients": [{"id": ID, "level": 0}], "decryption": "none"}, "streamSettings": {"network": "ws", "security": "none", "wsSettings": {"path": "/vla"}}, "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"], "metadataOnly": False}}
+            {"port": A_PORT, "protocol": p_v, "settings": {"clients": [{"id": UID, "flow": p_f}], "decryption": "none", "fallbacks": [{"dest": 3001}, {"path": "/vla", "dest": 3002}]}, "streamSettings": {"network": "tcp"}},
+            {"port": 3001, "listen": "127.0.0.1", "protocol": p_v, "settings": {"clients": [{"id": UID}], "decryption": "none"}, "streamSettings": {"network": "tcp", "security": "none"}},
+            {"port": 3002, "listen": "127.0.0.1", "protocol": p_v, "settings": {"clients": [{"id": UID, "level": 0}], "decryption": "none"}, "streamSettings": {"network": "ws", "security": "none", "wsSettings": {"path": "/vla"}}, "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"], "metadataOnly": False}}
         ],
         "dns": {"servers": ["https+local://8.8.8.8/dns-query"]},
         "outbounds": [{"protocol": o_f, "tag": "direct"}, {"protocol": o_b, "tag": "block"}]
@@ -266,7 +266,7 @@ async def generate_links(a_domain):
     try:
         isp = await get_isp_info()
         p_v = base64.b64decode('dmxlc3M=').decode('utf-8')
-        v_link = f"{p_v}://{ID}@{CIP}:{CPORT}?encryption=none&security=tls&sni={a_domain}&fp=chrome&type=ws&host={a_domain}&path=%2Fvla%3Fed%3D2560#{NAME}-{isp}-vl"
+        v_link = f"{p_v}://{UID}@{CIP}:{CPORT}?encryption=none&security=tls&sni={a_domain}&fp=chrome&type=ws&host={a_domain}&path=%2Fvla%3Fed%3D2560#{NAME}-{isp}-vl"
         
         sub_content = f"{v_link}\n"
         current_links_content = base64.b64encode(sub_content.encode()).decode()
