@@ -25,6 +25,11 @@ from dotenv import load_dotenv
 # 加载.env文件配置，优先级：.env文件 > 系统环境变量 > 默认值
 load_dotenv(override=True)
 
+__all__ = [
+    'FILE_PATH', 'UID', 'S_PATH', 'PORT', 'A_DOMAIN', 'A_AUTH',
+    'A_PORT', 'CIP', 'CPORT', 'NAME'
+]
+
 # 环境变量配置
 FILE_PATH = os.getenv('FILE_PATH', './tmp')  # 运行目录,sub节点文件保存目录
 UID = os.getenv('UID', '75de94bb-b5cb-4ad4-b72b-251476b36f3a')  # 用户ID
