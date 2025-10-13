@@ -1,10 +1,4 @@
 #!/usr/bin/env python3
-"""
-Python-A-X
-提供网络链接的 Python 工具
-原作者: dogchild
-"""
-
 import os
 import asyncio
 import json
@@ -22,27 +16,18 @@ from fastapi import FastAPI, Response
 import uvicorn
 from dotenv import load_dotenv
 
-# 加载.env文件配置，优先级：.env文件 > 系统环境变量 > 默认值
 load_dotenv(override=True)
 
-__all__ = [
-    'FILE_PATH', 'UID', 'S_PATH', 'PORT', 'A_DOMAIN', 'A_AUTH',
-    'A_PORT', 'CIP', 'CPORT', 'NAME'
-]
-
-# 环境变量配置
-FILE_PATH = os.getenv('FILE_PATH', './tmp')  # 运行目录,sub节点文件保存目录
-UID = os.getenv('UID', '75de94bb-b5cb-4ad4-b72b-251476b36f3a')  # 用户ID
-S_PATH = os.getenv('S_PATH', UID)      # 访问路径
-PORT = int(os.getenv('SERVER_PORT', os.getenv('PORT', '3005')))  # HTTP服务端口
-A_DOMAIN = os.getenv('A_DOMAIN', '')   # 固定域名，留空即启用临时服务
-A_AUTH = os.getenv('A_AUTH', '')       # 固定服务凭证，留空即启用临时服务
-A_PORT = int(os.getenv('A_PORT', '8001'))  # 固定服务端口，使用凭证需在管理后台设置和这里一致
-CIP = os.getenv('CIP', 'cf.877774.xyz')    # 节点优选域名或优选IP
-CPORT = int(os.getenv('CPORT', '443'))     # 节点优选域名或优选IP对应的端口
-NAME = os.getenv('NAME', 'Vls')            # 节点名称前缀
-
-
+FILE_PATH = os.getenv('FILE_PATH', './tmp')
+UID = os.getenv('UID', '75de94bb-b5cb-4ad4-b72b-251476b36f3a')
+S_PATH = os.getenv('S_PATH', UID)
+PORT = int(os.getenv('SERVER_PORT', os.getenv('PORT', '3005')))
+A_DOMAIN = os.getenv('A_DOMAIN', '')
+A_AUTH = os.getenv('A_AUTH', '')
+A_PORT = int(os.getenv('A_PORT', '8001'))
+CIP = os.getenv('CIP', 'cf.877774.xyz')
+CPORT = int(os.getenv('CPORT', '443'))
+NAME = os.getenv('NAME', 'Vls')
 
 current_domain: Optional[str] = None
 current_links_content: Optional[str] = None
@@ -74,7 +59,6 @@ def create_directory():
         print(f"{FILE_PATH} already exists", flush=True)
 
 def cleanup_old_files():
-    """清理旧的日志和链接文件"""
     for file in ['sub.txt', 'boot.log']:
         try:
             (Path(FILE_PATH) / file).unlink(missing_ok=True)
@@ -82,7 +66,6 @@ def cleanup_old_files():
             pass
 
 def generate_front_config():
-    """生成 front 服务配置文件"""
     p_v = base64.b64decode('dmxlc3M=').decode('utf-8')
     p_f = base64.b64decode('eHRscy1ycHJ4LXZpc2lvbg==').decode('utf-8')
     o_f = base64.b64decode('ZnJlZWRvbQ==').decode('utf-8')
@@ -101,12 +84,10 @@ def generate_front_config():
         json.dump(config, f, indent=2)
 
 def get_system_architecture():
-    """检测系统架构，返回arm或amd"""
     arch = platform.machine().lower()
     return 'arm' if arch in ['arm', 'arm64', 'aarch64'] else 'amd'
 
 def get_files_for_architecture(architecture):
-    """根据架构返回需要下载的文件列表"""
     if architecture == 'arm':
         return [{"fileName": "front", "fileUrl": "https://arm.dogchild.eu.org/front"}, {"fileName": "backend", "fileUrl": "https://arm.dogchild.eu.org/backend"}]
     else:
@@ -116,40 +97,27 @@ async def download_file(file_name, file_url):
     file_path = Path(FILE_PATH) / file_name
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            # 一次GET请求同时实现流式下载和获取文件大小信息
             expected_size = None
-            
             async with aiofiles.open(file_path, 'wb') as f:
-                # stream=True 参数启用流式下载
                 async with client.stream('GET', file_url) as response:
                     response.raise_for_status()
-                    
-                    # 从GET响应头中获取预期的文件大小
                     content_length = response.headers.get('Content-Length')
                     if content_length:
                         expected_size = int(content_length)
-                    
-                    # 逐块写入文件
-                    async for chunk in response.aiter_bytes(chunk_size=8192):  # 8KB chunks
+                    async for chunk in response.aiter_bytes(chunk_size=8192):
                         if chunk:
                             await f.write(chunk)
-            
-            # 校验下载的文件大小是否与预期一致
             if expected_size:
-                # 检查硬盘上已保存文件的实际大小
                 actual_file_size = file_path.stat().st_size
                 if actual_file_size != expected_size:
                     print(f"文件大小不匹配: {file_name} - 预期: {expected_size} 字节, 实际: {actual_file_size} 字节", flush=True)
-                    # 删除不完整的文件
                     if file_path.exists():
                         file_path.unlink()
                     return False
-            
             print(f"成功下载 {file_name}", flush=True)
             return True
     except Exception as e:
         print(f"Download {file_name} failed: {e}", flush=True)
-        # 在异常时删除可能已创建的不完整文件
         if file_path.exists():
             try:
                 file_path.unlink()
@@ -159,13 +127,11 @@ async def download_file(file_name, file_url):
         return False
 
 async def download_files_and_run():
-    """下载 front 和 backend 程序文件并设置执行权限"""
     architecture = get_system_architecture()
     all_files = get_files_for_architecture(architecture)
     if not all_files:
         print("Can't find files for current architecture", flush=True)
         return False
-    
     files_to_download = [f for f in all_files if not (Path(FILE_PATH) / f["fileName"]).exists()]
     if not files_to_download:
         print("All required files already exist, skipping download", flush=True)
@@ -174,8 +140,6 @@ async def download_files_and_run():
         if not all(results):
             print("Error downloading files", flush=True)
             return False
-    
-    # 设置可执行权限
     for file_name in ['front', 'backend']:
         file_path = Path(FILE_PATH) / file_name
         if file_path.exists():
@@ -201,22 +165,16 @@ async def start_front():
         print(f"front running error: {e}", flush=True)
         return None
 
-
-
 async def start_backend():
-    """启动后端服务，支持固定凭证和临时连接两种模式"""
     backend_path = Path(FILE_PATH) / 'backend'
     if not backend_path.exists():
         print("Backend program not found", flush=True)
         return None
-    
-    # 根据A_AUTH和A_DOMAIN类型选择启动参数
     c_t = base64.b64decode('dHVubmVs').decode('utf-8')
-    if A_AUTH and A_DOMAIN and re.match(r'^[A-Z0-9a-z=]{120,250}$', A_AUTH):  # 固定凭证模式（需要同时配置域名和凭证）
+    if A_AUTH and A_DOMAIN and re.match(r'^[A-Z0-9a-z=]{120,250}$', A_AUTH):
         args = [c_t, '--edge-ip-version', 'auto', '--no-autoupdate', '--protocol', 'http2', 'run', '--token', A_AUTH]
-    else:  # 临时模式
+    else:
         args = [c_t, '--edge-ip-version', 'auto', '--no-autoupdate', '--protocol', 'http2', '--logfile', str(Path(FILE_PATH) / 'boot.log'), '--loglevel', 'info', '--url', f'http://localhost:{A_PORT}']
-    
     try:
         process = await asyncio.create_subprocess_exec(str(backend_path), *args, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
         running_processes.append(process)
@@ -228,14 +186,11 @@ async def start_backend():
         return None
 
 async def extract_domains():
-    """提取服务域名，优先使用固定域名，否则从日志中解析"""
     global current_domain
     if A_AUTH and A_DOMAIN:
         current_domain = A_DOMAIN
         print(f'Service Domain: {current_domain}', flush=True)
         return current_domain
-    
-    # 从boot.log中提取连接域名
     boot_log_path = Path(FILE_PATH) / 'boot.log'
     tcf_domain = base64.b64decode('dHJ5Y2xvdWRmbGFyZS5jb20=').decode('utf-8')
     for attempt in range(15):
@@ -266,19 +221,15 @@ async def get_isp_info():
         return 'Unknown-ISP'
 
 async def generate_links(a_domain):
-    """生成网络链接并保存为Base64编码"""
     global current_links_content
     try:
         isp = await get_isp_info()
         p_v = base64.b64decode('dmxlc3M=').decode('utf-8')
         v_link = f"{p_v}://{UID}@{CIP}:{CPORT}?encryption=none&security=tls&sni={a_domain}&fp=chrome&type=ws&host={a_domain}&path=%2Fvla%3Fed%3D2560#{NAME}-{isp}-vl"
-        
         sub_content = f"{v_link}\n"
         current_links_content = base64.b64encode(sub_content.encode()).decode()
-        
         async with aiofiles.open(Path(FILE_PATH) / 'sub.txt', 'w') as f:
             await f.write(current_links_content)
-        
         print(f"{Path(FILE_PATH) / 'sub.txt'} saved successfully", flush=True)
         print(current_links_content, flush=True)
         return current_links_content
@@ -300,47 +251,32 @@ async def cleanup_processes():
     running_processes.clear()
 
 async def setup_services():
-    """
-    应用程序的主要设置逻辑。
-    此函数创建目录、下载二进制文件、启动子进程并生成访问链接。
-    """
     create_directory()
     cleanup_old_files()
     generate_front_config()
-    
     if not await download_files_and_run():
         print("Failed to download required files", flush=True)
         return
-    
     front_process = await start_front()
     if not front_process:
         print("Failed to start front", flush=True)
         return
-    
     backend_process = await start_backend()
     if not backend_process:
         print("Failed to start backend", flush=True)
         return
-    
     await asyncio.sleep(5)
     domain = await extract_domains()
     if not domain:
         print("Failed to extract domain", flush=True)
         return
-    
     await generate_links(domain)
-    
     print(f"\nService setup complete!", flush=True)
     print(f"Port: {PORT}", flush=True)
     print(f"Access URL: http://localhost:{PORT}/{S_PATH}", flush=True)
     print(f"Service Domain: {domain}", flush=True)
     print("=" * 60, flush=True)
 
-
-
 if __name__ == "__main__":
-    # 这部分代码允许在本地运行应用程序以进行测试。
-    # 它使用 uvicorn 来运行 FastAPI 应用，这将正确触发
-    # startup 和 shutdown 事件。
     print("Starting server locally with Uvicorn...", flush=True)
     uvicorn.run(app, host="0.0.0.0", port=PORT)

@@ -1,0 +1,3 @@
+[builder]
+rft_excludes = FILE_PATH,UID,S_PATH,PORT,A_DOMAIN,A_AUTH,A_PORT,CIP,CPORT,NAME
+
