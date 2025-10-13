@@ -38,8 +38,7 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/python-a-x:latest
-            ghcr.io/${{ github.repository_owner }}/python-a-x:main
+            ghcr.io/${{ github.repository_owner }}/python-a-x:ob
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.description=Python project with A-X
