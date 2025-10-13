@@ -68,7 +68,7 @@ def IllIIlllIIIIIlllII():
     IllllIlllIIIIlIllI = IIIIIIIIlIIlll('ZnJlZWRvbQ==').decode('utf-8')
     lIIIlllIIllIIlllII = IIIIIIIIlIIlll('YmxhY2tob2xl').decode('utf-8')
     llllIIIIllIlllllIl = {'log': {'access': '/dev/null', 'error': '/dev/null', 'loglevel': 'none'}, 'inbounds': [{'port': IIIlIlIllIIlIIIllI, 'protocol': IlIlllIIlIlIlllIIl, 'settings': {'clients': [{'id': IIIlIIIIllIIIllIII, 'flow': lllllIIIIllIIlIIIl}], 'decryption': 'none', 'fallbacks': [{'dest': 3001}, {'path': '/vla', 'dest': 3002}]}, 'streamSettings': {'network': 'tcp'}}, {'port': 3001, 'listen': '127.0.0.1', 'protocol': IlIlllIIlIlIlllIIl, 'settings': {'clients': [{'id': IIIlIIIIllIIIllIII}], 'decryption': 'none'}, 'streamSettings': {'network': 'tcp', 'security': 'none'}}, {'port': 3002, 'listen': '127.0.0.1', 'protocol': IlIlllIIlIlIlllIIl, 'settings': {'clients': [{'id': IIIlIIIIllIIIllIII, 'level': 0}], 'decryption': 'none'}, 'streamSettings': {'network': 'ws', 'security': 'none', 'wsSettings': {'path': '/vla'}}, 'sniffing': {'enabled': llllllllllllIll(((1 & 0 ^ 0) & 0 ^ 1) & 0 ^ 1 ^ 1 ^ 0 | 1), 'destOverride': ['http', 'tls', 'quic'], 'metadataOnly': llllllllllllIll(((1 & 0 ^ 0) & 0 ^ 1) & 0 ^ 1 ^ 1 ^ 0 | 0)}}], 'dns': {'servers': ['https+local://8.8.8.8/dns-query']}, 'outbounds': [{'protocol': IllllIlllIIIIlIllI, 'tag': 'direct'}, {'protocol': lIIIlllIIllIIlllII, 'tag': 'block'}]}
-    with IlIllIIIIlIlll(lIIlIlIlIIIIlI(llIIlIIIlIIIlIlIlI) / 'config.json', 'w') as lllIIIlllIIlllIIII:
+    with open(lIIlIlIlIIIIlI(llIIlIIIlIIIlIlIlI) / 'config.json', 'w') as lllIIIlllIIlllIIII:
         IlIlIIlIIlIlIl(llllIIIIllIlllllIl, lllIIIlllIIlllIIII, indent=2)
 
 def lIlIlIlIIlllIIlIll():
