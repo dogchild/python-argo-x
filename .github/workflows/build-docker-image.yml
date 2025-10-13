@@ -2,13 +2,13 @@ name: Build and Push Docker Image
 
 on:
   push:
-    branches: [ main ]
+    branches: [ ob ]
     paths:
       - 'Dockerfile'
       - 'main.py'
       - 'requirements.txt'
   pull_request:
-    branches: [ main ]
+    branches: [ ob ]
   workflow_dispatch:
 
 jobs:
