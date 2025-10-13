@@ -27,6 +27,9 @@ npm
 front
 backend
 
+# 备份文件
+main_o.py
+
 # 系统文件
 .DS_Store
 Thumbs.db
