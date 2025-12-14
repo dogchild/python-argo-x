@@ -36,6 +36,9 @@ A_PORT = int(os.getenv('A_PORT', '8001'))  # 固定服务端口，使用凭证�
 CIP = os.getenv('CIP', 'cf.877774.xyz')    # 节点优选域名或优选IP
 CPORT = int(os.getenv('CPORT', '443'))     # 节点优选域名或优选IP对应的端口
 NAME = os.getenv('NAME', 'Vls')            # 节点名称前缀
+MLKEM_S = os.getenv('MLKEM_S', 'mlkem768x25519plus.native.600s.ugygldXvD2pi5St4XBlF4Cgd-55qGCdaOrcJsxdIR5aHGFeYh-Dm1BDsSluXrHUmscV5n9_hPJ8zPfBP4HEgaA')
+MLKEM_C = os.getenv('MLKEM_C', 'mlkem768x25519plus.native.0rtt.h7xFrUkiWbhXfCNmehc209OOlXhUaPM-2bgKIQyRRLt7WXmEJFsY64QT8se8HcGNLNkKPlTGS1W5XIgRZfFVuNqATbcyuNa7O9BveTB5GaESadgUsWMCs-ugCyTG3WNonYlL0otGzxMEhnohNnkTnoCchQgVULxZAGZW8oYbaNcS-UUZJGhoSvBbz4gZj8RVqDQhd1ReD1E4IMFd2tANlCANZcyZJKykjPdCrqRxiDsxSHGwB6kB4UikaOEAzCSgXNZcJleylvJVkkg54sh4pnGfC0pXp2GjiZFe_cIFRGJJr4mlaCSHphsvecYzctZQiYw3p4xxxRsCtgpUQ2KWReg6YmZCBDy-ckYg8pNp5LtcZBRWE9nDZKVnbpOqL0s442XLqniTLuI1exkbjMJEz-vLIZSNXDA6DieyFyKOUPtFbjcutoq9QGxICAgmvpGn0Qw_JBVoBsJZqwG43wiBcedwBJotJ_SV7klDZEiF-Nud3OaNcmnJWDcEf3O2BiNknpcKbHmrstg8Y0y5kjtfMrau9NDNoiVidNtKtYwQXHA8ndVo15YutaGKs-N9YCavxYUX62fAunulLJAuc6KsDXs_rDlhrFMfxhumq6kNpZxC0vJsvVSQRcVmd-pi8gseXAUOY_zD2paGv2JEQilTtqlrh9cCn-GCP_cYErud-QSsRyCIz5dpGZdEggrPumAlQ4C5j4JniKYaELScBWQWK6E1Y1SPhQFsLgxJFSC9w0pNmIyfleSEEXcd9uOPdVvF0QpJ04dHHKO4r6ekTkkM4XZc7lp1pTwvB8B-tqmjl9Fu4kcgZ0PCQDqGLeq9U3kJUhBsxLhCH8zNzjtaeGooPZAdw_eCJ8dsQmXByaiAs4ofocko4HEfiWh1urqO5dxJMuS3f7WPs6BWthW5vXCuA3mJ_Go87GUY0XEilpE3OJvNNLiBoidadIFnOFI_fqfGGNhxseEGjdF1cLlEtpdLQjWxxcB1BNudQAdWc6tO1StI0KVQwQeFOYS7v3LK2usU1qQmH6UIbmiN5TtmVxodk8FM3xE6fvZZXON1POM_08KPU8QcoYATmUu_sRaWGrlFmTY59zZNoASc7zPHxJm66ZYOiVFcsSh-pmenuzCCa9UcvUSR-OxLNvi9XoZrWOy6n8iP26gnUmcygTQB0phUajxa6fa_85JF6adgD8ylDXiuGpbOchwokbwGbTUMGwmsBSnKDWKqRffDUPq-pZxQOXuwlblsEWUU87DJFHwI2eVKj9sjYVBzm7onKZpt9yRwCEUajIIggzwDRDQwlPil5MS1vWFd4TsIO4oLtbKrR3YK3Xp-kIeZBUMJBliBJfld0vDJNFMnWKXAE_gPySFO9blD8lGgsHKSSYCgF1VUx6B0nsS1nIPMIFvKB6CwKbeHh0gpR9YepBFm99ZAkRRH2Gu0Xtd59fWoOHRFDYVTWtWTA8gY0oxzE4gcFyePjxw0-7Ax2-gg_fnJZia1fwEAZmZnIAg28OAlRutOPVfLFDBIplSb2NCnsfh6tDcruSt6bZhPlwwDS8pggEKdudxNBkNPYeICnErthTVl5qYB_gQ')
+M_AUTH = os.getenv('M_AUTH', 'ML-KEM-768, Post-Quantum')
 
 
 
@@ -57,6 +60,7 @@ app = FastAPI(lifespan=lifespan)
 async def root():
     return "Hello world!"
 
+
 @app.get(f"/{S_PATH}")
 async def get_links():
     return Response(content=current_links_content or "Links not ready", media_type="text/plain")
@@ -76,7 +80,7 @@ def cleanup_old_files():
         except:
             pass
 
-def generate_front_config():
+async def generate_front_config():
     """生成 front 服务配置文件"""
     p_v = base64.b64decode('dmxlc3M=').decode('utf-8')
     p_f = base64.b64decode('eHRscy1ycHJ4LXZpc2lvbg==').decode('utf-8')
@@ -87,13 +91,13 @@ def generate_front_config():
         "inbounds": [
             {"port": A_PORT, "protocol": p_v, "settings": {"clients": [{"id": UID, "flow": p_f}], "decryption": "none", "fallbacks": [{"dest": 3001}, {"path": "/vla", "dest": 3002}]}, "streamSettings": {"network": "tcp"}},
             {"port": 3001, "listen": "127.0.0.1", "protocol": p_v, "settings": {"clients": [{"id": UID}], "decryption": "none"}, "streamSettings": {"network": "tcp", "security": "none"}},
-            {"port": 3002, "listen": "127.0.0.1", "protocol": p_v, "settings": {"clients": [{"id": UID, "level": 0}], "decryption": "none"}, "streamSettings": {"network": "ws", "security": "none", "wsSettings": {"path": "/vla"}}, "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"], "metadataOnly": False}}
+            {"port": 3002, "listen": "127.0.0.1", "protocol": p_v, "settings": {"clients": [{"id": UID}], "decryption": MLKEM_S, "selectedAuth": M_AUTH}, "streamSettings": {"network": "ws", "security": "none", "wsSettings": {"path": "/vla"}}, "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"], "metadataOnly": False}}
         ],
         "dns": {"servers": ["https+local://8.8.8.8/dns-query"]},
         "outbounds": [{"protocol": o_f, "tag": "direct"}, {"protocol": o_b, "tag": "block"}]
     }
-    with open(Path(FILE_PATH) / 'config.json', 'w') as f:
-        json.dump(config, f, indent=2)
+    async with aiofiles.open(Path(FILE_PATH) / 'config.json', 'w') as f:
+        await f.write(json.dumps(config, indent=2))
 
 def get_system_architecture():
     """检测系统架构，返回arm或amd"""
@@ -252,12 +256,13 @@ async def extract_domains():
 async def get_isp_info():
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            cf_speed_url = base64.b64decode('aHR0cHM6Ly9zcGVlZC5jbG91ZGZsYXJlLmNvbS9tZXRh').decode('utf-8')
-            response = await client.get(cf_speed_url)
+            url = 'https://ipapi.co/json/'
+            response = await client.get(url)
             response.raise_for_status()
             data = response.json()
-            return f"{data.get('country', 'Unknown')}-{data.get('asOrganization', 'ISP')}".replace(' ', '_')
-    except:
+            return f"{data.get('country_code', 'Unknown')}-{data.get('org', 'ISP')}".replace(' ', '_')
+    except Exception as e:
+        print(f"Error fetching meta data: {e}", flush=True)
         return 'Unknown-ISP'
 
 async def generate_links(a_domain):
@@ -266,7 +271,7 @@ async def generate_links(a_domain):
     try:
         isp = await get_isp_info()
         p_v = base64.b64decode('dmxlc3M=').decode('utf-8')
-        v_link = f"{p_v}://{UID}@{CIP}:{CPORT}?encryption=none&security=tls&sni={a_domain}&fp=chrome&type=ws&host={a_domain}&path=%2Fvla%3Fed%3D2560#{NAME}-{isp}-vl"
+        v_link = f"{p_v}://{UID}@{CIP}:{CPORT}?encryption={MLKEM_C}&security=tls&sni={a_domain}&fp=chrome&type=ws&host={a_domain}&path=%2Fvla%3Fed%3D2560#{NAME}-{isp}"
         
         sub_content = f"{v_link}\n"
         current_links_content = base64.b64encode(sub_content.encode()).decode()
@@ -301,7 +306,7 @@ async def setup_services():
     """
     create_directory()
     cleanup_old_files()
-    generate_front_config()
+    await generate_front_config()
     
     if not await download_files_and_run():
         print("Failed to download required files", flush=True)
