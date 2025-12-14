@@ -61,6 +61,9 @@
 | `CIP` | `cf.877774.xyz` | 节点优选域名或 IP |
 | `CPORT` | `443` | 节点端口 |
 | `NAME` | `Vls` | 节点名称前缀 |
+| `MLKEM_S` | `mlkem768...` | VLESS ENC 服务端密钥 |
+| `MLKEM_C` | `mlkem768...` | VLESS ENC 客户端密钥 |
+| `M_AUTH` | `ML-KEM-768, Post-Quantum` | VLESS ENC 认证信息 |
 
 ### 隧道配置模式
 
